@@ -1,0 +1,15 @@
+certifi
+cycler
+kiwisolver
+matplotlib
+mkl-service
+numpy
+pandas
+pyparsing
+PyQtWebEngine
+python-dateutil
+pytz
+scipy
+six
+tornado
+wincertstore
