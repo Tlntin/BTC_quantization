@@ -5,7 +5,7 @@ class Config(object):
     parent_dir = os.path.dirname(os.path.abspath(__file__))
     data_dir = os.path.join(parent_dir, 'data')
     temp_dir = os.path.join(data_dir, 'temp')
-    btc_path = os.path.join(data_dir, 'BTC.csv')  # 比特币文件所在路径
+    btc_path = os.path.join(data_dir, 'btc.gz')  # 比特币文件所在路径
     sequence_num = 256  # 单个数据拥有的数据,4*46也就是46小时
     # sequence_interval = 4  # 每隔4个取一个
     sequence_pre_num = 16  # 预测时间段为4h(实际就是4*4, 因为已经包含了间隔)
@@ -14,7 +14,7 @@ class Config(object):
     thread_num = 64  # 线程数量
     cpu_num = 8  # 处理器线程，根据你的电脑实际写
     classify_num = 5  # 分类类别
-    batch_size = 400
+    batch_size = 100
     epochs = 400
     model_dir = os.path.join(data_dir, 'model')
     if not os.path.exists(model_dir):

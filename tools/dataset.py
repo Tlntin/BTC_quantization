@@ -87,7 +87,7 @@ class MyDataset(object):
                 date_time = self.btc_df.iloc[index, 0]
                 target_list = self.target_df.loc[date_time].values.astype('float32')
                 # 正式合并
-                x = np.insert(x, 5, values=target_list, axis=1)
+                x = np.insert(x, 31, values=target_list, axis=1)  # x修改为31纬数据
                 # 标准化
                 x = scale.fit_transform(x)
                 x_batch.append(x)
@@ -120,6 +120,7 @@ if __name__ == '__main__':
     x1 = y1 = None
     for x1, y1 in tqdm(data.get_batch_data(train), total=len(train)):
         break
+    print(x1.shape)
     print(x1)
     print('===')
     print(y1)

@@ -109,7 +109,7 @@ def valid_model(dataset, valid_index, model, criterion):
 
 if __name__ == '__main__':
     model1 = resnet18()
-    optimizer1 = optim.Adam(model1.parameters(), lr=0.001, betas=(0.9, 0.98), eps=1e-09, weight_decay=0.0002)
+    optimizer1 = optim.Adam(model1.parameters(), lr=0.001, betas=(0.9, 0.98), eps=1e-09, weight_decay=0.003)
     model1 = model1.to(device)
     criterion1 = nn.CrossEntropyLoss().to(device)
     dataset1 = MyDataset()

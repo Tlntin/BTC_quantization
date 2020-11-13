@@ -40,15 +40,16 @@ class SENet(nn.Module):
     def __init__(self, block, num_classes=Config.classify_num):
         """
         基于Resnet升级版SeNet构建的网络
-        input_size = (batch_size, 1000, 5)
+        input_size = (batch_size, 256, 32)
         :param block: 残差网络块
         :param num_classes: 分类结果,目前为5分类
         """
         super().__init__()
-        self.rnn = nn.LSTM(6, 128, num_layers=2, dropout=0.5, batch_first=True)
-        self.conv1 = nn.Conv1d(1, 64, kernel_size=(3, 3), stride=(4, 2), padding=1, bias=False)
-        self.bn1 = nn.BatchNorm2d(64)
-        self.in_planes = 64
+        self.rnn = nn.LSTM(32, 64, num_layers=2, dropout=0.4, batch_first=True, bidirectional=True)
+        self.conv1 = nn.Conv1d(1, 32, kernel_size=(3, 3), stride=(2, 1), padding=1, bias=False)
+        self.bn1 = nn.BatchNorm2d(32)
+        self.in_planes = 32
+        self.layer0 = self._make_layer(block, 32, 2, stride=1)
         self.layer1 = self._make_layer(block, 64, 2, stride=1)
         self.layer2 = self._make_layer(block, 128, 2, stride=2)
         self.layer3 = self._make_layer(block, 256, 2, stride=2)
@@ -64,9 +65,10 @@ class SENet(nn.Module):
         return nn.Sequential(*layers)
 
     def forward(self, x):
-        out, (hidden, cell) = self.rnn(x)  # [28, 1000, 128]
+        out, (hidden, cell) = self.rnn(x)  # [28, 254, 128]
         out = out.view(out.size(0), 1, out.size(1), out.size(2))  # 增加一维
         out = F.relu(self.bn1(self.conv1(out)))  # [28, 32, 64, 64]
+        out = self.layer0(out)
         out = self.layer1(out)
         out = self.layer2(out)
         out = self.layer3(out)
@@ -82,7 +84,7 @@ def resnet18():
 
 
 if __name__ == '__main__':
-    x1 = torch.rand(28, 256, 6)
+    x1 = torch.rand(28, 256, 32)
     net = SENet(PreActBlock)
     result = net(x1)
     print(result.shape)

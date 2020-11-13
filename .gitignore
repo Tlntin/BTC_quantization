@@ -1,3 +1,9 @@
 .idea
 .DS_Store
 */__pycache__
+/data/btc.gz
+/data/BTC.csv
+/data/target_256.gz
+/data/train.pkl
+/data/test.pkl
+/data/valid.pkl
