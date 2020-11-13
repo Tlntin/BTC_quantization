@@ -1,13 +1,14 @@
 from config import Config
 import time
 import torch
-import copy
 import os
 from torch import optim, nn
 from tools.model import resnet18
 from tools.dataset import MyDataset
 from tools.utils import clip_gradient, save_checkpoint
 from tqdm import tqdm
+from collections import Counter
+
 
 config = Config()
 device = torch.device('cuda' if torch.cuda.is_available() else "cpu")
@@ -42,21 +43,29 @@ def train_model(dataset, train_index, valid_index,  model, criterion, optimizer)
         running_train_loss = 0
         running_train_correct = 0
         running_train_num = 0
-        for step, (x, y) in tqdm(enumerate(dataset.get_batch_data(train_index)), total=batch_length):
+        iter_data = tqdm(enumerate(dataset.get_batch_data(train_index)), total=batch_length)
+        y_pred_list = []
+        for step, (x, y) in iter_data:
             running_train_num += x.shape[0]  # 对x进行计数
             x = torch.from_numpy(x).to(device)
             y = torch.from_numpy(y).to(device)
             outputs = model(x)
             y_pred = torch.argmax(outputs, 1)
+            y_pred_list.extend(y_pred.detach().cpu().data.numpy().tolist())  # 统计所有预测值
             loss = criterion(outputs, y)
             optimizer.zero_grad()
             loss.backward()
             clip_gradient(optimizer, 1.0)  # 切割梯度
             optimizer.step()
             running_train_loss += loss.item() * x.size(0)
-            running_train_correct += torch.sum(y_pred == y.data)
+            temp_correct = torch.sum(torch.eq(y_pred.cpu().data, y.cpu().data))
+            running_train_correct += temp_correct.float()  # 转成浮点型
+            iter_data.set_description('train_loss:{:.4f}, train_acc:{:.4f}'.format(loss.item(),
+                                                                                   temp_correct.float() / x.size(0)))
+        pred_dict = Counter(y_pred_list)
+        print('当前训练集的预测值为:', pred_dict)
         epoch_train_loss = running_train_loss / running_train_num
-        epoch_train_acc = running_train_correct.double() / running_train_num
+        epoch_train_acc = running_train_correct / running_train_num
         train_loss_result.append(epoch_train_loss)
         train_acc_result.append(epoch_train_acc)
         # ---  开始验证模型 --- #
@@ -93,17 +102,26 @@ def valid_model(dataset, valid_index, model, criterion):
     print('=' * 20)
     model.eval()  # 开始验证模式
     with torch.no_grad():  # 省掉计算图
-        for x, y in tqdm(dataset.get_batch_data(valid_index), total=batch_length):
+        y_pred_list = []
+        iter_data = tqdm(dataset.get_batch_data(valid_index), total=batch_length)
+        for x, y in iter_data:
             running_valid_num += x.shape[0]
             x = torch.from_numpy(x).to(device)
             y = torch.from_numpy(y).to(device)
             outputs = model(x)
             y_pred = outputs.argmax(dim=1)
+            y_pred_list.extend(y_pred.detach().cpu().data.numpy().tolist())  # 统计所有预测值
             loss = criterion(outputs, y)
             running_valid_loss += loss.item() * x.size(0)
-            running_valid_correct += torch.sum(y_pred == y.data)
+            temp_correct = torch.sum(torch.eq(y_pred.cpu().data, y.cpu().data))
+            running_valid_correct += temp_correct.float()
+            iter_data.set_description(
+                'train_loss:{:.4f}, train_acc:{:.4f}'.format(loss.item(),
+                                                             temp_correct.float() / x.size(0)))
+        pred_dict = Counter(y_pred_list)
+        print('当前验证集的预测值为:', pred_dict)
     epoch_valid_loss = running_valid_loss / running_valid_num
-    epoch_valid_acc = running_valid_correct.double() / running_valid_num
+    epoch_valid_acc = running_valid_correct / running_valid_num
     return epoch_valid_loss, epoch_valid_acc
 
 

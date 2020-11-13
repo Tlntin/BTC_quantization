@@ -2,12 +2,13 @@ import time
 import pandas as pd
 import numpy as np
 from config import Config
-import random
 import os
 from tqdm import tqdm
 from tools.data_preprocess import classify_y
 from sklearn.preprocessing import StandardScaler
 import pickle
+from collections import Counter
+
 
 config = Config()
 
@@ -49,13 +50,13 @@ class MyDataset(object):
         :param batch_index_list: batch开始索引构建的列表
         """
         scale = StandardScaler()
-        for i in range(0, len(batch_index_list) - config.batch_size, config.batch_size ):
+        for i in range(0, len(batch_index_list) - config.batch_size, config.batch_size):
             # 保险起见,减去一个batch_size
             x_batch = []
             y_batch = []
             for size in range(config.batch_size):
                 index = batch_index_list[i + size]
-                x = self.btc_df.iloc[index - config.sequence_num: index, 1:].astype('float32').values
+                x = self.btc_df.iloc[index - config.sequence_num: index, 1: 32].astype('float32').values
                 y = self.btc_df.iloc[index, 32]
                 y = classify_y(y)  # y 归类
                 y = np.array(y)
@@ -76,9 +77,10 @@ if __name__ == '__main__':
     data = MyDataset()
     train, valid, test = data.split_btc_batch()
     x1 = y1 = None
-    for x1, y1 in tqdm(data.get_batch_data(train), total=len(train)):
+    y_list1 = []
+    for x1, y1 in tqdm(data.get_batch_data(test), total=len(test) // config.batch_size):
+        print(x1.shape)
         break
-    print(x1.shape)
-    print(x1)
-    print('===')
-    print(y1)
+    #     y_list1.extend(y1)
+    # dict1 = Counter(y_list1)
+    # print(dict1)

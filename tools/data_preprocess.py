@@ -173,6 +173,10 @@ class DataPreProcess(object):
             train_index.extend(temp_index[:train_length])
             valid_index.extend(temp_index[train_length: train_length + valid_length])
             test_index.extend(temp_index[train_length + valid_length:])
+        # 再次随机打散
+        random.shuffle(train_index)
+        random.shuffle(valid_index)
+        random.shuffle(test_index)
         # 写入到pickle
         with open(os.path.join(config.pickle_dir, 'train.pkl'), 'wb') as f:
             pickle.dump(train_index, f)

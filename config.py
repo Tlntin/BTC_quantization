@@ -16,7 +16,7 @@ class Config(object):
     thread_num = 64  # 线程数量
     cpu_num = 8  # 处理器线程，根据你的电脑实际写
     classify_num = 5  # 分类类别
-    batch_size = 2
+    batch_size = 100
     epochs = 400
     model_dir = os.path.join(data_dir, 'model')
     if not os.path.exists(model_dir):
